@@ -9,18 +9,35 @@
 #include <assert.h>
 #include "simplelin.hh"
 #include "ifloat.hh"
-template <typename T> using complex = Complex<T>;
+#include <complex>
+//template <typename T> using complex = Complex<T>;
+template <typename T> using complex = std::complex<T>;
 #include "p0.hh"
 
+const auto pblocks(8);
+
 /*
+const auto blocks(128);
+const auto szperm((718 + 7) / 8);
+typedef DUInt<DUInt<DUInt<DUInt<uint64_t, 64>, 128>, 256>, 512> perm_t;
+typedef DUInt<uint64_t, 64> punch_t;
+
 const auto blocks(64);
 const auto szperm((297 + 7) / 8);
 typedef DUInt<DUInt<DUInt<uint64_t, 64>, 128>, 256> perm_t;
-*/
+typedef uint64_t punch_t;
+
 const auto blocks(16);
 const auto szperm((46 + 7) / 8);
 typedef uint64_t perm_t;
-typedef SimpleFloat<uint32_t, uint64_t, 32, short> sfloat;
+typedef uint16_t punch_t;
+*/
+const auto blocks(7);
+const auto szperm(2);
+typedef uint32_t perm_t;
+typedef uint8_t punch_t;
+//typedef SimpleFloat<uint32_t, uint64_t, 32, short> sfloat;
+typedef double sfloat;
 
 void usage() {
   std::cerr << "Usage: psnd [-e | -d]" << std::endl;
@@ -44,7 +61,7 @@ SimpleVector<uint8_t> blockout(const SimpleVector<int16_t>& buf) {
   perm_t permraw;
   permraw ^= permraw;
   std::vector<uint8_t> outbase;
-  uint64_t punch;
+  punch_t punch;
   punch ^= punch;
   int  bidx(0);
   bool flag(false);
@@ -52,8 +69,8 @@ SimpleVector<uint8_t> blockout(const SimpleVector<int16_t>& buf) {
     const auto& tb(s0[buf.size() - i - 1]);
     int cnt(0);
     for(int j = 0; j < tb.second; j ++)
-      if(! (punch & (j ? (1 << j) : 1))) cnt ++;
-    punch |= tb.second ? (1 << tb.second) : 1;
+      if(! (punch & (j ? (punch_t(1) << j) : punch_t(1)))) cnt ++;
+    punch |= tb.second ? (punch_t(1) << tb.second) : punch_t(1);
     assert(0 <= cnt && cnt < buf.size() - i);
     if(i < buf.size() - 1) {
       permraw += perm_t(int(cnt));
@@ -81,7 +98,7 @@ SimpleVector<uint8_t> blockout(const SimpleVector<int16_t>& buf) {
     if(! tb.first.first)
       flag = true;
   }
-  //assert(!(punch + 1));
+  //assert(!(++ punch));
   SimpleVector<uint8_t> out(outbase.size() + szperm);
   for(int i = 0; i < szperm; i ++)
     out[i] = uint8_t(int(i ? (permraw >> (i * 8)) : permraw) & 0xff);
@@ -108,7 +125,7 @@ std::pair<SimpleVector<int16_t>, bool> blockin(std::istream& in) {
   }
   std::vector<int> isort;
   std::vector<int> idxs;
-  uint64_t punch;
+  punch_t punch;
   isort.resize(out.first.size(), 0);
   idxs.resize(out.first.size(), 0);
   punch ^= punch;
@@ -116,7 +133,7 @@ std::pair<SimpleVector<int16_t>, bool> blockin(std::istream& in) {
     isort[i - 1] = int(permraw % perm_t(i));
     permraw     /= perm_t(i);
   }
-  //assert(! permraw);
+  assert(! permraw);
   for(int i = 0; i < isort.size(); i ++) {
     int cnt(i < isort.size() - 1 ? isort[isort.size() - 1 - i] : 0);
     int j(0);
@@ -124,16 +141,16 @@ std::pair<SimpleVector<int16_t>, bool> blockin(std::istream& in) {
     for(int cnt = 0;
             cnt <= isort[isort.size() - 1 - i] && j < blocks;
             j ++)
-      if(! (punch & (j ? (1 << j) : 1))) {
+      if(! (punch & (j ? (punch_t(1) << j) : punch_t(1)))) {
         if(++ cnt <= isort[isort.size() - 1 - i])
           continue;
         else
           break;
       }
-    punch   |= j ? (1 << j) : 1;
+    punch   |= j ? (punch_t(1) << j) : punch_t(1);
     idxs[i]  = j;
   }
-  //assert(!(punch + 1));
+  //assert(!(++ punch));
   // decode after them.
   uint8_t work(0);
   int     bidx(0);
@@ -172,8 +189,10 @@ std::pair<SimpleVector<int16_t>, bool> blockin(std::istream& in) {
 
 int main(int argc, char* argv[]) {
   if(argc < 2) usage();
-  const auto pnext(P0<sfloat>().next(blocks));
-        auto pwork(pnext);
+  P0<sfloat>           p;
+  SimpleVector<sfloat> pwork(max(blocks, pblocks));
+  for(int i = 0; i < pwork.size(); i ++)
+    pwork[i] = sfloat(0);
   if(std::string(argv[1]) == std::string("-e")) {
     try {
       SimpleVector<int16_t> work(blocks);
@@ -191,7 +210,7 @@ int main(int argc, char* argv[]) {
         out0[szperm - 1] = ~ out0[szperm - 1];
         for(int i = 0; i < work.size(); i ++) {
           const auto bbuf(work[i]);
-          work[i] -= int(pnext.dot(pwork));
+          work[i] -= int(p.next(pwork));
           for(int j = 1; j < pwork.size(); j ++)
             pwork[j - 1] = pwork[j];
           pwork[pwork.size() - 1] = sfloat(int(bbuf));
@@ -221,7 +240,7 @@ int main(int argc, char* argv[]) {
         work = w.first;
         if(! w.second)
           for(int i = 0; i < work.size(); i ++) {
-            work[i] += int(pnext.dot(pwork));
+            work[i] += int(p.next(pwork));
             for(int j = 1; j < pwork.size(); j ++)
               pwork[j - 1] = pwork[j];
             pwork[pwork.size() - 1] = sfloat(int(work[i]));
