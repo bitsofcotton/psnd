@@ -189,16 +189,14 @@ std::pair<SimpleVector<int16_t>, bool> blockin(std::istream& in) {
 
 int main(int argc, char* argv[]) {
   if(argc < 2) usage();
-  P0<sfloat>           p;
-  SimpleVector<sfloat> pwork(max(blocks, pblocks));
-  for(int i = 0; i < pwork.size(); i ++)
-    pwork[i] = sfloat(0);
+  P0B<sfloat>          p(pblocks);
   if(std::string(argv[1]) == std::string("-e")) {
     try {
       SimpleVector<int16_t> work(blocks);
+      int nbuf(0);
       for(int i = 0; i < work.size(); i ++) {
         std::cin.read(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
-        pwork[i] = sfloat(int(work[i]));
+        nbuf = int(p.next(sfloat(work[i])));
       }
       const auto out(blockout(work));
       for(int i = 0; i < out.size(); i ++)
@@ -210,10 +208,8 @@ int main(int argc, char* argv[]) {
         out0[szperm - 1] = ~ out0[szperm - 1];
         for(int i = 0; i < work.size(); i ++) {
           const auto bbuf(work[i]);
-          work[i] -= int(p.next(pwork));
-          for(int j = 1; j < pwork.size(); j ++)
-            pwork[j - 1] = pwork[j];
-          pwork[pwork.size() - 1] = sfloat(int(bbuf));
+          work[i] -= nbuf;
+          nbuf     = int(p.next(sfloat(int(bbuf))));
         }
         const auto out(blockout(work));
         if(out.size() <= out0.size())
@@ -231,24 +227,23 @@ int main(int argc, char* argv[]) {
     try {
       const auto w(blockin(std::cin));
       auto work(w.first);
+      int  nbuf(0);
       for(int i = 0; i < work.size(); i ++) {
         std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
-        pwork[i] = sfloat(int(work[i]));
+        nbuf = int(p.next(sfloat(int(work[i]))));
       }
       while(! std::cin.eof() && ! std::cin.bad()) {
         const auto w(blockin(std::cin));
         work = w.first;
         if(! w.second)
           for(int i = 0; i < work.size(); i ++) {
-            work[i] += int(p.next(pwork));
-            for(int j = 1; j < pwork.size(); j ++)
-              pwork[j - 1] = pwork[j];
-            pwork[pwork.size() - 1] = sfloat(int(work[i]));
+            work[i] += nbuf;
+            nbuf     = int(p.next(sfloat(int(work[i]))));
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         else
           for(int i = 0; i < work.size(); i ++) {
-            pwork[i] = sfloat(int(work[i]));
+            nbuf = int(p.next(sfloat(int(work[i]))));
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         std::cout.flush();
