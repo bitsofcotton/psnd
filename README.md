@@ -11,7 +11,7 @@ So this is another try.
 
 # Description
 Compress continuous 16-bit signed integer input by using P0 prediction. This uses block and count by factorial but this is safe for compress and uncompress.
-There exists unsafe method like this without p0, it accesses aleph_\]0, 1\[ space on counting aleph_2 as infinity. It's unsafe. (cf. 1999 bit operation compression patents, <strike>2002-2003</strike>2005-2007 journals around physics but google doesn't find them that I saw.)
+There exists unsafe method like this without p0, it accesses aleph_\]0, 1\[ space on counting aleph_2 as infinity. It's unsafe. (cf. 1999 bit operation compression patents, 2005-2007 journals around physics but google doesn't find them that I saw.)
 
 # Tips
 This is only useful if original datastream is continuous enough, otherwise, this expands data (becase of this, this is safe.)
