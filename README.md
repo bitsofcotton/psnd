@@ -16,5 +16,9 @@ There exists unsafe method like this without p0, it accesses aleph_\]0, 1\[ spac
 # Tips
 This is only useful if original datastream is continuous enough, otherwise, this expands data (becase of this, this is safe.)
 
+# Another Download Sites
+* https://drive.google.com/drive/folders/1B71X1BMttL6yyi76REeOTNRrpopO8EAR?usp=sharing
+* https://1drv.ms/u/s!AnqkwcwMjB_PaDIfXya_M3-aLXw?e=qzfKcU
+
 # Archive
 This repository is archived, so without bug report, will no change.
