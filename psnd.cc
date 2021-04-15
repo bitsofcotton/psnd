@@ -7,14 +7,12 @@
 #include <sstream>
 #include <cstring>
 #include <assert.h>
-#include "simplelin.hh"
 #include "ifloat.hh"
 #include <complex>
 //template <typename T> using complex = Complex<T>;
 template <typename T> using complex = std::complex<T>;
-#include "p0.hh"
 
-const auto pblocks(8);
+const auto pblocks(200);
 
 /*
 const auto blocks(128);
@@ -38,6 +36,10 @@ typedef uint32_t perm_t;
 typedef uint8_t punch_t;
 //typedef SimpleFloat<uint32_t, uint64_t, 32, short> sfloat;
 typedef double sfloat;
+typedef sfloat num_t;
+
+#include "simplelin.hh"
+#include "p0.hh"
 
 void usage() {
   std::cerr << "Usage: psnd [-e | -d]" << std::endl;
@@ -189,7 +191,7 @@ std::pair<SimpleVector<int16_t>, bool> blockin(std::istream& in) {
 
 int main(int argc, char* argv[]) {
   if(argc < 2) usage();
-  P0B<sfloat>          p(pblocks);
+  P0<sfloat> p(pblocks);
   if(std::string(argv[1]) == std::string("-e")) {
     try {
       SimpleVector<int16_t> work(blocks);
