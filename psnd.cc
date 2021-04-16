@@ -8,9 +8,8 @@
 #include <cstring>
 #include <assert.h>
 #include "ifloat.hh"
-#include <complex>
-//template <typename T> using complex = Complex<T>;
-template <typename T> using complex = std::complex<T>;
+typedef myfloat num_t;
+typedef num_t sfloat;
 
 const auto pblocks(200);
 
@@ -34,9 +33,6 @@ const auto blocks(7);
 const auto szperm(2);
 typedef uint32_t perm_t;
 typedef uint8_t punch_t;
-//typedef SimpleFloat<uint32_t, uint64_t, 32, short> sfloat;
-typedef double sfloat;
-typedef sfloat num_t;
 
 #include "simplelin.hh"
 #include "p0.hh"

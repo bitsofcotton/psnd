@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #if !defined(_P0_)
 
-template <typename T, bool denoise> const SimpleVector<T>& nextP0(const int& size) {
+template <typename T, bool denoise = false> const SimpleVector<T>& nextP0(const int& size) {
   assert(0 < size);
   static vector<SimpleVector<T> > P;
   if(P.size() <= size)

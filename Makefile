@@ -1,16 +1,14 @@
 CXX=	clang++
-#CXX=	eg++
-LD=	${CXX}
 
 # compiler flags.
-CXXFLAGS+=	-std=c++11 -Ofast -gfull -mtune=native
-#CXXFLAGS+=	-std=c++11 -Ofast -gfull -mtune=native
+CXXFLAGS+=	-std=c++11
+CXXFLAGS+=	-fopenmp -L/usr/local/lib -lomp
+CXXFLAGS+=	-Ofast -mtune=native -gfull
 LDFLAGS+=	-lc++
-#LDFLAGS+=	-lestdc++
 
-CLEANFILES= *.o psnd
-
-all:		psnd
-clean:
-	@rm -rf ${CLEANFILES}
+#CXXFLAGS+=	-D_FLOAT_BITS_=32
+#CXXFLAGS+=	-D_FLOAT_BITS_=64
+#CXXFLAGS+=	-D_FLOAT_BITS_=128
+#CXXFLAGS+=	-D_FLOAT_BITS_=256
+#CXXFLAGS+=	-D_FLOAT_BITS_=512
 
