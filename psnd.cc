@@ -54,10 +54,8 @@ SimpleVector<uint8_t> blockout(const SimpleVector<int16_t>& buf) {
   assert(buf.size() == blocks);
   std::vector<std::pair<std::pair<uint16_t, int16_t>, int> > s0;
   s0.reserve(buf.size());
-  for(int i = 0; i < buf.size(); i ++) {
+  for(int i = 0; i < buf.size(); i ++)
     s0.emplace_back(std::make_pair(std::make_pair(abs(buf[i]), buf[i]), i));
-    if(buf[i] == int16_t(0x8000)) s0[i].first.first = 0x8000;
-  }
   std::sort(s0.begin(), s0.end());
   perm_t permraw;
   permraw ^= permraw;
@@ -200,7 +198,6 @@ int main(int argc, char* argv[]) {
       for(int i = 0; i < work.size(); i ++) {
         std::cin.read(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
         nbuf = int(3 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
-        if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
       }
       const auto out(blockout(work));
       for(int i = 0; i < out.size(); i ++)
@@ -214,7 +211,6 @@ int main(int argc, char* argv[]) {
           const auto bbuf(work[i]);
           work[i] -= nbuf;
           nbuf     = int(3 <= argc ? q.next(sfloat(int(bbuf))) : p.next(sfloat(int(bbuf))));
-          if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
         }
         const auto out(blockout(work));
 /*
@@ -240,7 +236,6 @@ int main(int argc, char* argv[]) {
       for(int i = 0; i < work.size(); i ++) {
         std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
         nbuf = int(3 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
-        if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
       }
       while(! std::cin.eof() && ! std::cin.bad()) {
         const auto w(blockin(std::cin));
@@ -249,13 +244,11 @@ int main(int argc, char* argv[]) {
           for(int i = 0; i < work.size(); i ++) {
             work[i] += nbuf;
             nbuf     = int(3 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
-            if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         else
           for(int i = 0; i < work.size(); i ++) {
             nbuf = int(3 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
-            if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         std::cout.flush();
