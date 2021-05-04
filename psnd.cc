@@ -52,10 +52,12 @@ inline int countMSB(const int16_t& x) {
 
 SimpleVector<uint8_t> blockout(const SimpleVector<int16_t>& buf) {
   assert(buf.size() == blocks);
-  std::vector<std::pair<std::pair<int16_t, int16_t>, int> > s0;
+  std::vector<std::pair<std::pair<uint16_t, int16_t>, int> > s0;
   s0.reserve(buf.size());
-  for(int i = 0; i < buf.size(); i ++)
+  for(int i = 0; i < buf.size(); i ++) {
     s0.emplace_back(std::make_pair(std::make_pair(abs(buf[i]), buf[i]), i));
+    if(buf[i] == int16_t(0x8000)) s0[i].first.first = 0x8000;
+  }
   std::sort(s0.begin(), s0.end());
   perm_t permraw;
   permraw ^= permraw;
@@ -132,7 +134,8 @@ std::pair<SimpleVector<int16_t>, bool> blockin(std::istream& in) {
     isort[i - 1] = int(permraw % perm_t(i));
     permraw     /= perm_t(i);
   }
-  assert(! permraw);
+  // XXX: clang is something buggy:
+  // assert(! permraw);
   for(int i = 0; i < isort.size(); i ++) {
     int cnt(i < isort.size() - 1 ? isort[isort.size() - 1 - i] : 0);
     int j(0);
@@ -196,6 +199,7 @@ int main(int argc, char* argv[]) {
       for(int i = 0; i < work.size(); i ++) {
         std::cin.read(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
         nbuf = int(p.next(sfloat(work[i])));
+        if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - nbuf);
       }
       const auto out(blockout(work));
       for(int i = 0; i < out.size(); i ++)
@@ -209,14 +213,19 @@ int main(int argc, char* argv[]) {
           const auto bbuf(work[i]);
           work[i] -= nbuf;
           nbuf     = int(p.next(sfloat(int(bbuf))));
+          if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - nbuf);
         }
         const auto out(blockout(work));
+/*
         if(out.size() <= out0.size())
           for(int i = 0; i < out.size(); i ++)
             std::cout.write(reinterpret_cast<const char*>(&out[i]), sizeof(uint8_t));
         else
           for(int i = 0; i < out0.size(); i ++)
             std::cout.write(reinterpret_cast<const char*>(&out0[i]), sizeof(uint8_t));
+*/
+        for(int i = 0; i < out.size(); i ++)
+          std::cout.write(reinterpret_cast<const char*>(&out[i]), sizeof(uint8_t));
         std::cout.flush();
       }
     } catch(...) {
@@ -230,6 +239,7 @@ int main(int argc, char* argv[]) {
       for(int i = 0; i < work.size(); i ++) {
         std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
         nbuf = int(p.next(sfloat(int(work[i]))));
+        if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - nbuf);
       }
       while(! std::cin.eof() && ! std::cin.bad()) {
         const auto w(blockin(std::cin));
@@ -238,11 +248,13 @@ int main(int argc, char* argv[]) {
           for(int i = 0; i < work.size(); i ++) {
             work[i] += nbuf;
             nbuf     = int(p.next(sfloat(int(work[i]))));
+            if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - nbuf);
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         else
           for(int i = 0; i < work.size(); i ++) {
             nbuf = int(p.next(sfloat(int(work[i]))));
+            if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - nbuf);
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         std::cout.flush();
