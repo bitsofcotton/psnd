@@ -199,7 +199,7 @@ int main(int argc, char* argv[]) {
       for(int i = 0; i < work.size(); i ++) {
         std::cin.read(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
         nbuf = int(p.next(sfloat(work[i])));
-        if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - nbuf);
+        if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
       }
       const auto out(blockout(work));
       for(int i = 0; i < out.size(); i ++)
@@ -213,7 +213,7 @@ int main(int argc, char* argv[]) {
           const auto bbuf(work[i]);
           work[i] -= nbuf;
           nbuf     = int(p.next(sfloat(int(bbuf))));
-          if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - nbuf);
+          if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
         }
         const auto out(blockout(work));
 /*
@@ -239,7 +239,7 @@ int main(int argc, char* argv[]) {
       for(int i = 0; i < work.size(); i ++) {
         std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
         nbuf = int(p.next(sfloat(int(work[i]))));
-        if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - nbuf);
+        if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
       }
       while(! std::cin.eof() && ! std::cin.bad()) {
         const auto w(blockin(std::cin));
@@ -248,13 +248,13 @@ int main(int argc, char* argv[]) {
           for(int i = 0; i < work.size(); i ++) {
             work[i] += nbuf;
             nbuf     = int(p.next(sfloat(int(work[i]))));
-            if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - nbuf);
+            if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         else
           for(int i = 0; i < work.size(); i ++) {
             nbuf = int(p.next(sfloat(int(work[i]))));
-            if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - nbuf);
+            if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         std::cout.flush();
