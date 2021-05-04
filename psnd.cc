@@ -12,7 +12,7 @@
 typedef myfloat num_t;
 typedef num_t sfloat;
 
-const auto pblocks(200);
+const auto pblocks(80);
 
 /*
 const auto blocks(128);
@@ -199,7 +199,7 @@ int main(int argc, char* argv[]) {
       int nbuf(0);
       for(int i = 0; i < work.size(); i ++) {
         std::cin.read(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
-        nbuf = int(2 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
+        nbuf = int(3 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
         if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
       }
       const auto out(blockout(work));
@@ -213,7 +213,7 @@ int main(int argc, char* argv[]) {
         for(int i = 0; i < work.size(); i ++) {
           const auto bbuf(work[i]);
           work[i] -= nbuf;
-          nbuf     = int(2 <= argc ? q.next(sfloat(int(bbuf))) : p.next(sfloat(int(bbuf))));
+          nbuf     = int(3 <= argc ? q.next(sfloat(int(bbuf))) : p.next(sfloat(int(bbuf))));
           if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
         }
         const auto out(blockout(work));
@@ -239,7 +239,7 @@ int main(int argc, char* argv[]) {
       int  nbuf(0);
       for(int i = 0; i < work.size(); i ++) {
         std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
-        nbuf = int(2 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
+        nbuf = int(3 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
         if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
       }
       while(! std::cin.eof() && ! std::cin.bad()) {
@@ -248,13 +248,13 @@ int main(int argc, char* argv[]) {
         if(! w.second)
           for(int i = 0; i < work.size(); i ++) {
             work[i] += nbuf;
-            nbuf     = int(2 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
+            nbuf     = int(3 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
             if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         else
           for(int i = 0; i < work.size(); i ++) {
-            nbuf = int(2 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
+            nbuf = int(3 <= argc ? q.next(sfloat(int(work[i]))) : p.next(sfloat(int(work[i]))));
             if(0x8000 <= abs(nbuf)) nbuf = - int16_t(0x8000 - abs(nbuf)) * (nbuf < 0 ? - 1 : 1);
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
