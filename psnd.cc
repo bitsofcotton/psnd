@@ -8,9 +8,10 @@
 #include <sstream>
 #include <cstring>
 #include <assert.h>
-#include "ifloat.hh"
+#include "lieonn.hh"
 typedef myfloat num_t;
 typedef num_t sfloat;
+#include "p0.hh"
 
 const auto pblocks(80);
 
@@ -34,9 +35,6 @@ const auto blocks(7);
 const auto szperm(2);
 typedef uint32_t perm_t;
 typedef uint8_t punch_t;
-
-#include "simplelin.hh"
-#include "p0.hh"
 
 void usage() {
   std::cerr << "Usage: psnd [-e | -d]" << std::endl;
