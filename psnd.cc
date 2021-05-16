@@ -78,7 +78,7 @@ SimpleVector<uint8_t> blockout(const SimpleVector<int16_t>& buf) {
       outbase.emplace_back(tb.first.second & 0xff);
       outbase.emplace_back((tb.first.second >> 8) & 0xff);
     } else {
-      auto bits(min(countMSB(s0[buf.size() - i].first.first) + 2, 16));
+      auto bits(countMSB(s0[buf.size() - i].first.first) + 2);
       while(0 < bits) {
         const auto residue(8 - bidx);
         if(! bidx) outbase.emplace_back(0);
@@ -160,7 +160,7 @@ std::pair<SimpleVector<int16_t>, bool> blockin(std::istream& in) {
       in.read(reinterpret_cast<char*>(&work), sizeof(uint8_t));
       outs |= work << 8;
     } else {
-      const auto  bits0(min(countMSB(abs(out.first[idxs[i - 1]])) + 2, 16));
+      const auto  bits0(countMSB(abs(out.first[idxs[i - 1]])) + 2);
             auto  bits(bits0);
       outs ^= outs;
       while(0 < bits) {
