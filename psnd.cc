@@ -211,16 +211,12 @@ int main(int argc, char* argv[]) {
           nbuf     = int(3 <= argc ? q.next(sfloat(int(bbuf))) : p.next(sfloat(int(bbuf))));
         }
         const auto out(blockout(work));
-/*
         if(out.size() <= out0.size())
           for(int i = 0; i < out.size(); i ++)
             std::cout.write(reinterpret_cast<const char*>(&out[i]), sizeof(uint8_t));
         else
           for(int i = 0; i < out0.size(); i ++)
             std::cout.write(reinterpret_cast<const char*>(&out0[i]), sizeof(uint8_t));
-*/
-        for(int i = 0; i < out.size(); i ++)
-          std::cout.write(reinterpret_cast<const char*>(&out[i]), sizeof(uint8_t));
         std::cout.flush();
       }
     } catch(...) {
