@@ -82,7 +82,7 @@ template <typename T, bool walk> inline P0<T, walk>::~P0() {
 
 template <typename T, bool walk> inline T P0<T, walk>::next(const T& in) {
   for(int i = 0; i < buf.size() - 1; i ++)
-    buf[i]  = buf[i + 1];
+    buf[i] = std::move(buf[i + 1]);
   buf[buf.size() - 1] = atan(in);
   return tan(nextP0<T, walk>(buf.size()).dot(buf));
 }
