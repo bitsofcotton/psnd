@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #if !defined(_P0_)
 
-template <typename T, bool walk = false> const SimpleVector<T>& nextP0(const int& size) {
+template <typename T> const SimpleVector<T>& nextP0(const int& size) {
   static vector<SimpleVector<T> > P;
   if(P.size() <= size)
     P.resize(size + 1, SimpleVector<T>());
@@ -40,21 +40,18 @@ template <typename T, bool walk = false> const SimpleVector<T>& nextP0(const int
     if(size <= 1) {
       p    = SimpleVector<T>(1);
       p[0] = T(1);
-    } else {
+    } else if(size == 2) {
+      const auto q((taylor<T>(4, T(4)) + taylor<T>(4, T(5))) / T(2));
+      p = SimpleVector<T>(2).O();
+      p[0] = q[0] + q[1];
+      p[1] = q[2] + q[3];
+    } else
       p = taylor<T>(size, T(size));
-      if(walk) {
-        std::cerr << "." << std::flush;
-        const auto& pp(nextP0<T, walk>(size - 1));
-        for(int i = 0; i < pp.size(); i ++)
-          p[i - pp.size() + p.size()] += pp[i] * T(size - 1);
-        p /= T(size);
-      }
-    }
   }
   return p;
 }
 
-template <typename T, bool walk = false> class P0 {
+template <typename T, typename feeder> class P0 {
 public:
   typedef SimpleVector<T> Vec;
   inline P0();
@@ -62,29 +59,25 @@ public:
   inline ~P0();
   inline T next(const T& in);
 private:
-  Vec buf;
+  feeder f;
 };
 
-template <typename T, bool walk> inline P0<T, walk>::P0() {
+template <typename T, typename feeder> inline P0<T, feeder>::P0() {
   ;
 }
 
-template <typename T, bool walk> inline P0<T, walk>::P0(const int& size) {
+template <typename T, typename feeder> inline P0<T, feeder>::P0(const int& size) {
   assert(0 < size);
-  buf.resize(size);
-  for(int i = 0; i < buf.size(); i ++)
-    buf[i] = T(0);
+  f = feeder(size);
 }
 
-template <typename T, bool walk> inline P0<T, walk>::~P0() {
+template <typename T, typename feeder> inline P0<T, feeder>::~P0() {
   ;
 }
 
-template <typename T, bool walk> inline T P0<T, walk>::next(const T& in) {
-  for(int i = 0; i < buf.size() - 1; i ++)
-    buf[i] = std::move(buf[i + 1]);
-  buf[buf.size() - 1] = atan(in);
-  return tan(nextP0<T, walk>(buf.size()).dot(buf));
+template <typename T, typename feeder> inline T P0<T, feeder>::next(const T& in) {
+  const auto& ff(f.next(atan(in)));
+  return f.full ? tan(nextP0<T>(f.res.size()).dot(ff)) : T(0);
 }
 
 #define _P0_
