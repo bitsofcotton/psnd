@@ -187,7 +187,7 @@ std::pair<SimpleVector<int16_t>, bool> blockin(std::istream& in) {
 
 int main(int argc, char* argv[]) {
   if(argc < 2) usage();
-  P0<sfloat, linearFeeder<sfloat> > p(pblocks);
+  P0<sfloat, idFeeder<sfloat> > p(pblocks);
   if(std::string(argv[1]) == std::string("-e")) {
     try {
       SimpleVector<int16_t> work(blocks);

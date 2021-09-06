@@ -31,54 +31,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #if !defined(_P0_)
 
-template <typename T> const SimpleVector<T>& nextP0(const int& size) {
-  static vector<SimpleVector<T> > P;
-  if(P.size() <= size)
-    P.resize(size + 1, SimpleVector<T>());
-  auto& p(P[size]);
-  if(p.size() != size) {
-    if(size <= 1) {
-      p    = SimpleVector<T>(1);
-      p[0] = T(1);
-    } else if(size == 2) {
-      const auto q((taylor<T>(4, T(4)) + taylor<T>(4, T(5))) / T(2));
-      p = SimpleVector<T>(2).O();
-      p[0] = q[0] + q[1];
-      p[1] = q[2] + q[3];
-    } else
-      p = taylor<T>(size, T(size));
-  }
-  return p;
-}
-
 template <typename T, typename feeder> class P0 {
 public:
   typedef SimpleVector<T> Vec;
-  inline P0();
-  inline P0(const int& size);
-  inline ~P0();
-  inline T next(const T& in);
-private:
+  inline P0() { ; }
+  inline P0(const int& size, const int& step = 1) {
+    assert(2 < size);
+    f = feeder(size);
+    p = taylor(size, T(size + step - 1));
+    for(int i = 3; i < p.size(); i ++) {
+      const auto pp(taylor(i, T(i + step - 1)));
+      for(int j = 0; j < pp.size(); j ++)
+        p[j - pp.size() + p.size()] += pp[j];
+    }
+    p /= T(p.size() + 1 - 3);
+  }
+  inline ~P0() { ; };
+  inline T next(const T& in) {
+    const auto& ff(f.next(in));
+    return f.full ? p.dot(ff) - ff[ff.size() - 1] : T(0);
+  }
+  Vec p;
   feeder f;
 };
-
-template <typename T, typename feeder> inline P0<T, feeder>::P0() {
-  ;
-}
-
-template <typename T, typename feeder> inline P0<T, feeder>::P0(const int& size) {
-  assert(0 < size);
-  f = feeder(size);
-}
-
-template <typename T, typename feeder> inline P0<T, feeder>::~P0() {
-  ;
-}
-
-template <typename T, typename feeder> inline T P0<T, feeder>::next(const T& in) {
-  const auto& ff(f.next(atan(in)));
-  return f.full ? tan(nextP0<T>(f.res.size()).dot(ff)) : T(0);
-}
 
 #define _P0_
 #endif
