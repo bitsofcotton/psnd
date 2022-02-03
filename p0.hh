@@ -98,22 +98,46 @@ template <typename T, typename P> class P0D {
 public:
   typedef SimpleVector<T> Vec;
   inline P0D() { ; }
-  inline P0D(const int& size, const int& step = 1, const int& recur = 1) {
-    p = P(size, step);
-    q = P(size, step);
+  inline P0D(const int& size, const int& step = 1, const int& recur = 2) {
+    assert(0 <= recur);
+    p.resize(recur + 3, P(size, step));
+    bb.resize(recur + 1, b = T(int(t = 0)));
   }
   inline ~P0D() { ; };
   inline T next(const T& in) {
     const static T zero(int(0));
     const static T one(int(1));
-    const static T two(int(2));
-    if(in == zero) return zero;
-    const auto qn(q.next(one / in));
-    if(qn == zero) return p.next(in);
-    return (p.next(in) + one / qn) / two;
+    const auto bbb(bb);
+          auto res(T(int(0)));
+          int  cnt(0);
+    if(in != zero) {
+      const auto r(p[1].next(one / in));
+      if(r != zero) {
+        res += one / r;
+        cnt ++;
+      }
+    }
+    bb[0] = in - b;
+    for(int i = 1; i < bb.size(); i ++)
+      bb[i] = bb[i - 1] - bbb[i - 1];
+    for(int i = 0; i < std::min(int(bb.size()), t); i ++)
+      if(bb[i] != zero) {
+        const auto r(p[i + 2].next(one / bb[i]));
+        if(r != zero) {
+          res += one / r + in;
+          for(int j = 0; j < i; j ++)
+            res += bb[j];
+          cnt ++;
+        }
+      }
+    b = in;
+    t ++;
+    return cnt && p[p.size() - 1].f.full ? (p[0].next(in) * T(cnt) + res) /= T(2 * cnt) : zero;
   }
-  P p;
-  P q;
+  vector<P> p;
+  vector<T> bb;
+  T b;
+  int t;
 };
 
 #define _P0_
