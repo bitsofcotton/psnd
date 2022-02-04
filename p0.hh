@@ -98,46 +98,86 @@ template <typename T, typename P> class P0D {
 public:
   typedef SimpleVector<T> Vec;
   inline P0D() { ; }
-  inline P0D(const int& size, const int& step = 1, const int& recur = 2) {
-    assert(0 <= recur);
-    p.resize(recur + 3, P(size, step));
-    bb.resize(recur + 1, b = T(int(t = 0)));
+  inline P0D(const int& size, const int& step = 1) {
+    p = P(size, step);
+    q = P(size, step);
   }
   inline ~P0D() { ; };
   inline T next(const T& in) {
     const static T zero(int(0));
     const static T one(int(1));
-    const auto bbb(bb);
-          auto res(T(int(0)));
-          int  cnt(0);
-    if(in != zero) {
-      const auto r(p[1].next(one / in));
-      if(r != zero) {
-        res += one / r;
-        cnt ++;
-      }
+    const static T two(int(2));
+    if(in == zero) return zero;
+    const auto qn(q.next(one / in));
+    if(qn == zero) return p.next(in);
+    return (p.next(in) + one / qn) / two;
+  }
+  P p;
+  P q;
+};
+
+template <typename T, typename P> class PC {
+public:
+  inline PC() { ; }
+  inline PC(const P& p0, const int& sz = 20) {
+    p = P(p0);
+    q = P(p0);
+    bb.resize(sz, M = T(int(0)));
+    assert(! (bb.size() & 1));
+  }
+  inline ~PC() { ; };
+  inline T next(const T& in) {
+    for(int i = 1; i < bb.size() - 2; i ++)
+      bb[i - 1] = move(bb[i]);
+    bb[bb.size() - 2]  = bb[bb.size() - 1];
+    bb[bb.size() - 1] += in;
+    vector<T> H;
+    vector<T> h;
+    vector<T> g;
+    H.reserve(bb.size() / 2);
+    h.reserve(bb.size() / 2);
+    g.reserve(bb.size() / 2);
+    for(int i = 0; i < bb.size() / 2; i ++) {
+      g.emplace_back(bb[i * 2 + 0] + bb[i * 2 + 0]);
+      H.emplace_back(bb[i * 2 + 0] + bb[i * 2 + 1]);
+      h.emplace_back(bb[i * 2 + 1] + bb[i * 2 + 1]);
     }
-    bb[0] = in - b;
-    for(int i = 1; i < bb.size(); i ++)
-      bb[i] = bb[i - 1] - bbb[i - 1];
-    for(int i = 0; i < std::min(int(bb.size()), t); i ++)
-      if(bb[i] != zero) {
-        const auto r(p[i + 2].next(one / bb[i]));
-        if(r != zero) {
-          res += one / r + in;
-          for(int j = 0; j < i; j ++)
-            res += bb[j];
-          cnt ++;
-        }
-      }
-    b = in;
-    t ++;
-    return cnt && p[p.size() - 1].f.full ? (p[0].next(in) * T(cnt) + res) /= T(2 * cnt) : zero;
+    const auto MM(q.next(M * (H[H.size() - 1] - h[h.size() - 1] + g[g.size() - 2] - H[H.size() - 2])));
+    auto pp(p);
+    for(int i = 1; i < H.size(); i ++)
+      M = pp.next(H[i] - h[i] + g[g.size() - 1] - H[H.size() - 1]);
+    return - M * MM;
+  }
+  P p;
+  P q;
+  T M;
+  vector<T> bb;
+};
+
+template <typename T, typename P> class pC {
+public:
+  inline pC() { ; }
+  inline pC(const P& p0, const T& lower, const T& upper, const int& bit) {
+    assert(T(int(0)) < lower && lower < upper);
+    p.resize(bit, p0);
+    r = exp(log(upper - lower) / T(int(bit)));
+    this->lower = lower;
+    bres = T(int(0));
+  }
+  inline ~pC() { ; };
+  inline T next(const T& in) {
+    auto res(bres * T(int(2)));
+    bres = T(int(0));
+    for(int i = 0; i < p.size(); i ++) {
+      if(p[i].next(T(int(myint(in / lower / pow(r, T(i)))) & 1) - T(int(1)) / T(int(2))) > T(int(0)))
+        bres += lower * pow(r, T(i));
+    }
+    return res -= in;
   }
   vector<P> p;
-  vector<T> bb;
-  T b;
-  int t;
+  T lower;
+  T r;
+  T bres;
 };
 
 #define _P0_
