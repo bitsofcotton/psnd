@@ -137,6 +137,19 @@ public:
   P p;
 };
 
+template <typename T, typename I, typename P> class avgOrigin {
+public:
+  inline avgOrigin() { ; }
+  inline avgOrigin(P&& p) { S = T(t ^= t); this->p = p; }
+  inline ~avgOrigin() { ; }
+  inline T next(const T& in) {
+    S += in; ++ t; return p.next(in - S / T(t)) + S / T(t);
+  }
+  T S;
+  I t;
+  P p;
+};
+
 #define _P0_
 #endif
 
