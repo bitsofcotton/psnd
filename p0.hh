@@ -44,8 +44,8 @@ template <typename T> SimpleVector<T> pnext(const int& size, const int& step = 1
     p[0] = T(1);
   } else if(size <= 2) {
     p.resize(2);
-    p[0] = T(1) / T(2);
-    p[1] = T(1) / T(2) + T(1);
+    p[0] = T(1) / T(2) + T(step < 0 ? 1 : 0);
+    p[1] = T(1) / T(2) + T(step < 0 ? 0 : 1);
     p   /= T(2);
   } else {
     const auto file(std::string("./.cache/lieonn/next-") +
@@ -61,15 +61,17 @@ template <typename T> SimpleVector<T> pnext(const int& size, const int& step = 1
       cache >> p;
       cache.close();
     } else {
-      p = taylor(size, T(size + step - 1));
+      p = taylor(size, T(step < 0 ? step : size + step - 1));
       cerr << "." << flush;
-      const auto pp(pnext<T>(size - 1, step));
-      for(int j = 0; j < pp.size(); j ++)
-        p[j - pp.size() + p.size()] += pp[j] * T(size - 1);
-      p /= T(size);
-      ofstream ocache(file.c_str());
-      ocache << p << endl;
-      ocache.close();
+      if(abs(step) * 2 < size) {
+        const auto pp(pnext<T>(size - 1, step));
+        for(int j = 0; j < pp.size(); j ++)
+          p[j - pp.size() + p.size()] += pp[j] * T(size - 1);
+        p /= T(size);
+        ofstream ocache(file.c_str());
+        ocache << p << endl;
+        ocache.close();
+      }
     }
   }
   assert(p.size() == size);
@@ -79,19 +81,22 @@ template <typename T> SimpleVector<T> pnext(const int& size, const int& step = 1
 template <typename T, typename feeder> class P0 {
 public:
   typedef SimpleVector<T> Vec;
+  typedef SimpleMatrix<T> Mat;
   inline P0() { ; }
   inline P0(const int& size, const int& step = 1) {
     f = feeder(size);
+    g = feeder(size);
     p = pnext<T>(size, step);
   }
   inline ~P0() { ; };
   inline T next(const T& in) {
-    const auto& ff(f.next(in));
-    static const T zero(int(0));
-    return f.full ? p.dot(ff) : zero;
+    const auto ff(f.next(in));
+    const auto gg(g.next(num_t(int(1)) / in));
+    return f.full ? (p.dot(ff) + num_t(int(1)) / p.dot(gg)) / num_t(int(2)) : T(int(0));
   }
   Vec p;
   feeder f;
+  feeder g;
 };
 
 template <typename T, typename P> class northPole {
@@ -102,7 +107,7 @@ public:
   inline T next(const T& in) {
     static const T zero(int(0));
     static const T one(int(1));
-    static const T M(atan(one / sqrt(sqrt(SimpleMatrix<T>().epsilon))));
+    static const T M(atan(one / sqrt(SimpleMatrix<T>().epsilon)));
     if(! isfinite(in) || in == zero) return in;
     auto ain(atan(in));
     assert(- M < ain && ain < M);
@@ -117,14 +122,14 @@ public:
   P p;
 };
 
-template <typename T, typename P, bool avg = false> class sumChain {
+template <typename T, typename P> class avgOrigin {
 public:
-  inline sumChain() { ; }
-  inline sumChain(P&& p) { S = T(t ^= t); this->p = p; }
-  inline ~sumChain() { ; }
+  inline avgOrigin() { ; }
+  inline avgOrigin(P&& p) { S = T(t ^= t); this->p = p; }
+  inline ~avgOrigin() { ; }
   inline T next(const T& in) {
-    if(avg) { auto A((S += in) / T(++ t)); return p.next(in - A) + A; }
-    auto res(- S); return res += p.next(S += in);
+    const auto A((S += in) / T(++ t));
+    return p.next(in - A) + A;
   }
   myuint t;
   T S;
