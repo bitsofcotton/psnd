@@ -78,6 +78,15 @@ template <typename T> SimpleVector<T> pnext(const int& size, const int& step = 1
   return p;
 }
 
+template <typename T> const SimpleVector<T> pnextcache(const int& size, const int& step) {
+  assert(0 < size && 0 <= step);
+  vector<vector<SimpleVector<T> > > cp;
+  if(cp.size() <= size) cp.resize(size + 1, vector<SimpleVector<T> >());
+  if(cp[size].size() <= step) cp[size].resize(step + 1, SimpleVector<T>());
+  if(cp[size][step].size()) return cp[size][step];
+  return cp[size][step] = pnext<T>(size, step);
+}
+
 template <typename T, typename feeder> class P0 {
 public:
   typedef SimpleVector<T> Vec;
@@ -85,17 +94,54 @@ public:
   inline P0() { ; }
   inline P0(const int& size, const int& step = 1) {
     f = feeder(size);
-    g = feeder(size);
-    p = pnext<T>(size, step);
+    this->step = step;
   }
   inline ~P0() { ; };
   inline T next(const T& in) {
     const auto ff(f.next(in));
-    return f.full ? p.dot(ff) : T(int(0));
+    return f.full ? pnextcache<T>(ff.size(), step).dot(ff) : T(int(0));
   }
-  Vec p;
+  int step;
   feeder f;
-  feeder g;
+};
+
+template <typename T> const SimpleMatrix<complex<T> > dftcache(const int& size) {
+  assert(size != 0);
+  vector<SimpleMatrix<complex<T> > > cdft;
+  vector<SimpleMatrix<complex<T> > > cidft;
+  if(0 < size) {
+    if(cdft.size() <= size) cdft.resize(size + 1, SimpleMatrix<complex<T> >());
+    if(cdft[size].rows() && cdft[size].cols()) return cdft[size];
+    return cdft[size] = dft<T>(size);
+  }
+  if(cidft.size() <= abs(size)) cidft.resize(abs(size) + 1, SimpleMatrix<complex<T> >());
+  if(cidft[abs(size)].rows() && cidft[abs(size)].cols()) return cidft[abs(size)];
+  return cidft[abs(size)] = dft<T>(size);
+}
+
+template <typename T, typename P, typename feeder> class P0DFT {
+public:
+  typedef SimpleVector<T> Vec;
+  typedef SimpleMatrix<T> Mat;
+  inline P0DFT() { ; }
+  inline P0DFT(P&& p, const int& size) {
+    f = feeder(size);
+    (this->p).resize(size, p);
+    q = this->p;
+  }
+  inline ~P0DFT() { ; };
+  inline T next(const T& in) {
+    const auto& fn(f.next(in));
+    if(! f.full) return T(int(0));
+    auto ff(dftcache<T>(fn.size()) * fn.template cast<complex<T> >());
+    assert(ff.size() == p.size() && p.size() == q.size());
+    for(int i = 0; i < ff.size(); i ++)
+      ff[i] = complex<T>(p[i].next(ff[i].real()), q[i].next(ff[i].imag()));
+    return (dftcache<T>(- fn.size()) * ff)[ff.size() - 1].real();
+  }
+  vector<P> p;
+  vector<P> q;
+  feeder f;
 };
 
 template <typename T, typename P> class northPole {
@@ -109,9 +155,9 @@ public:
     static const T M(atan(one / sqrt(SimpleMatrix<T>().epsilon)));
     if(! isfinite(in) || in == zero) return in;
     auto ain(atan(in));
-    assert(- M < ain && ain < M);
+    //assert(- M < ain && ain < M);
     auto bin(atan(one / move(ain)));
-    assert(- M < bin && bin < M);
+    //assert(- M < bin && bin < M);
     auto pn(p.next(move(bin)));
     if(! isfinite(pn) || pn == zero) return in;
     auto res(tan(max(- M, min(M, one / tan(max(- M, min(M, move(pn))))))));
@@ -121,18 +167,20 @@ public:
   P p;
 };
 
-template <typename T, typename P> class avgOrigin {
+template <typename T, typename P, bool avg = false> class sumChain {
 public:
-  inline avgOrigin() { ; }
-  inline avgOrigin(P&& p) { S = T(t ^= t); this->p = p; }
-  inline ~avgOrigin() { ; }
+  inline sumChain() { ; }
+  inline sumChain(P&& p) { this->p = p; S = T(t ^= t); }
+  inline ~sumChain() { ; }
   inline T next(const T& in) {
-    const auto A((S += in) / T(++ t));
+    S += in;
+    if(! avg) return p.next(S) - S;
+    const auto A(S / T(++ t));
     return p.next(in - A) + A;
   }
-  myuint t;
   T S;
   P p;
+  myuint t;
 };
 
 #define _P0_
