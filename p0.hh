@@ -1,7 +1,7 @@
 /*
  BSD 3-Clause License
 
-Copyright (c) 2019-2021, bitsofcotton (kazunobu watatsu)
+Copyright (c) 2019-2022, bitsofcotton (kazunobu watatsu)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,7 @@ template <typename T> SimpleVector<T> pnext(const int& size, const int& step = 1
       if(abs(step) * 2 < size) {
         const auto pp(pnext<T>(size - 1, step));
         for(int j = 0; j < pp.size(); j ++)
-          p[j - pp.size() + p.size()] += pp[j] * T(size - 1);
+          p[step < 0 ? j : j - pp.size() + p.size()] += pp[j] * T(size - 1);
         p /= T(size);
         ofstream ocache(file.c_str());
         ocache << p << endl;
@@ -84,7 +84,7 @@ template <typename T> const SimpleVector<T>& pnextcache(const int& size, const i
   if(cp.size() <= size) cp.resize(size + 1, vector<SimpleVector<T> >());
   if(cp[size].size() <= step) cp[size].resize(step + 1, SimpleVector<T>());
   if(cp[size][step].size()) return cp[size][step];
-  return cp[size][step] = pnext<T>(size, step);
+  return cp[size][step] = (pnext<T>(size, step) + pnext<T>(size, step + 1)) / T(int(2));
 }
 
 template <typename T, typename feeder> class P0 {
@@ -98,10 +98,8 @@ public:
   }
   inline ~P0() { ; };
   inline T next(const T& in) {
-    const auto ff(f.next(in));
-    return f.full ? (pnextcache<T>(ff.size(), step) +
-                     pnextcache<T>(ff.size(), step - 1)).dot(ff) / T(int(2))
-                  : T(int(0));
+    const auto& ff(f.next(in));
+    return f.full ? pnextcache<T>(ff.size(), step).dot(ff) : T(int(0));
   }
   int step;
   feeder f;
@@ -128,8 +126,14 @@ public:
   inline P0DFT() { ; }
   inline P0DFT(P&& p, const int& size) {
     f = feeder(size);
-    (this->p).resize(size, p);
-    q = this->p;
+    (this->p).reserve(size);
+    q.reserve(size);
+    (this->p).emplace_back(p);
+    q.emplace_back((this->p)[0]);
+    for(int i = 1; i < size; i ++) {
+      (this->p).emplace_back((this->p)[0]);
+      q.emplace_back((this->p)[0]);
+    }
   }
   inline ~P0DFT() { ; };
   inline T next(const T& in) {
@@ -184,6 +188,101 @@ public:
   T S;
   P p;
   myuint t;
+};
+
+template <typename T, typename P> class logChain {
+public:
+  inline logChain() { ; }
+  inline logChain(P&& p) { this->p = p; S = T(int(0)); }
+  inline ~logChain() { ; }
+  inline T next(const T& in) {
+    static const T zero(int(0));
+    static const T one(int(1));
+    static const auto epsilon(sqrt(sqrt(SimpleMatrix<T>().epsilon)));
+    const auto bS(S);
+    S += in;
+    if(bS == zero) return zero;
+    const auto dd(S / bS - one);
+    if(! isfinite(dd)) return zero;
+    return p.next(dd / epsilon) * S * epsilon;
+  }
+  T S;
+  P p;
+};
+
+template <typename T, typename P> class P0Expect {
+public:
+  inline P0Expect() { ; }
+  inline P0Expect(P&& p, const int& nyquist = 2, const int& offset = 0) {
+    Mx = M = d = T(t ^= t);
+    t -= offset;
+    tM = nyquist;
+    assert(0 < tM);
+    this->p = p;
+  }
+  inline ~P0Expect() { ; }
+  inline const T& next(const T& in) {
+    if(0 <= t) d += in;
+    if(++ t < tM) return M;
+    Mx = max(Mx, abs(d /= T(tM * tM)) * T(int(2)));
+    M  = max(- Mx, min(Mx, p.next(d)));
+    d  = T(t ^= t);
+    return M;
+  }
+  int t;
+  int tM;
+  T d;
+  T M;
+  T Mx;
+  P p;
+};
+
+template <typename T, typename P> class P0ContRand {
+public:
+  inline P0ContRand() { ; }
+  inline P0ContRand(P&& p, const int& para) {
+    (this->p).reserve(para);
+    (this->p).emplace_back(p);
+    for(int i = 1; i < para; i ++)
+      (this->p).emplace_back((this->p)[0]);
+    r.resize(para, T(t ^= t));
+    br.resize(para, T(t));
+  }
+  inline ~P0ContRand() { ; }
+  inline T next(const T& in) {
+    t ++;
+    T res(0);
+    for(int i = 0; i < p.size(); i ++) {
+      const auto rr(t & 1 ? r[i] + br[i] : r[i] + r[i]);
+      res += p[i].next(in * rr);
+      if(! (t & 1)) {
+        br[i] = r[i];
+        r[i]  = T((random() & 0x7ffffff) + 1) / T(int(0x8000000));
+      }
+    }
+    return res /= T(int(p.size()));
+  }
+  vector<P> p;
+  vector<T> r;
+  vector<T> br;
+  int t;
+};
+
+template <typename T, typename P> class P0Binary01 {
+public:
+  inline P0Binary01() { ; }
+  inline P0Binary01(P&& p, const int& depth = 1) { (this->p).resize(depth, p); }
+  inline ~P0Binary01() { ; }
+  inline T next(const T& in) {
+    T pw(int(1));
+    T res(int(0));
+    for(int i = 0; i < p.size(); i ++) {
+      res += pw * (p[i].next(T(int(in / pw) & 1) - T(int(1)) / T(int(2))) + T(int(1)) / T(int(2)) );
+      pw /= T(int(2));
+    }
+    return res;
+  }
+  vector<P> p;
 };
 
 #define _P0_
