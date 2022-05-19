@@ -168,14 +168,14 @@ public:
     static const T one(int(1));
     static const T M(atan(one / sqrt(SimpleMatrix<T>().epsilon())));
     if(! isfinite(in) || in == zero) return in;
-    auto ain(atan(in));
-    //assert(- M < ain && ain < M);
-    auto bin(atan(one / move(ain)));
-    //assert(- M < bin && bin < M);
-    auto pn(p.next(move(bin)));
-    if(! isfinite(pn) || pn == zero) return in;
-    auto res(tan(max(- M, min(M, one / tan(max(- M, min(M, move(pn))))))));
-    if(isfinite(res)) return move(res);
+    auto work(atan(in));
+    assert(- M < work && work < M);
+    work = atan(one / work);
+    assert(- M < work && work < M);
+    work = p.next(work);
+    if(! isfinite(work) || work == zero) return in;
+    work = tan(max(- M, min(M, one / tan(max(- M, min(M, work))))));
+    if(isfinite(work)) return move(work);
     return in;
   }
   P p;
@@ -205,13 +205,12 @@ public:
   inline T next(const T& in) {
     static const T zero(int(0));
     static const T one(int(1));
-    static const auto epsilon(sqrt(sqrt(SimpleMatrix<T>().epsilon())));
     const auto bS(S);
     S += in;
     if(bS == zero) return zero;
     const auto dd(S / bS - one);
     if(! isfinite(dd)) return zero;
-    return p.next(dd / epsilon) * S * epsilon;
+    return p.next(dd) * S;
   }
   T S;
   P p;
