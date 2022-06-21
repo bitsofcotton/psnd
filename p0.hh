@@ -106,13 +106,6 @@ template <typename T> const SimpleVector<T>& mscache(const int& size) {
   return ms[size] = minsq<T>(size);
 }
 
-template <typename T> class Pnull {
-public:
-  inline Pnull() { ; }
-  inline ~Pnull() { ; };
-  inline T next(const T& in) { return T(int(0)); }
-};
-
 template <typename T, typename feeder> class P0 {
 public:
   inline P0() { ; }
@@ -122,6 +115,8 @@ public:
   }
   inline ~P0() { ; };
   inline T next(const T& in) {
+    static const T zero(int(0));
+    if(! step) return zero;
     const auto& ff(f.next(in));
 /*
     if(f.full) {
@@ -132,7 +127,7 @@ public:
       std::cerr << sqrt(avg.dot(avg) / ff.dot(ff)) << std::endl;
     }
 */
-    return f.full ? pnextcache<T>(ff.size(), step).dot(ff) : T(int(0));
+    return f.full ? pnextcache<T>(ff.size(), step).dot(ff) : ff[ff.size() - 1];
   }
   int step;
   feeder f;
@@ -250,25 +245,17 @@ public:
   P p;
 };
 
-template <typename T> class P0maxRank {
+template <typename T> class P0maxRank0 {
 public:
-  inline P0maxRank() { ; }
-  inline P0maxRank(const int& status, const int& var) {
+  inline P0maxRank0() { ; }
+  inline P0maxRank0(const int& status, const int& var) {
     assert(0 < status && 0 < var);
-    p = p0_st(p0_s6t(p0_s5t(p0_s4t(p0_s3t(p0_s2t(p0_1t(p0_0t(status, var), var) )) ) )) );
-    q = p0_it(p0_i6t(p0_i5t(p0_i4t(p0_i3t(p0_i2t(p0_i1t(p0_i0t(p0_0t(status, var) ), var) )) ) )) );
-    r = p0_at(p0_a6t(p0_a5t(p0_a4t(p0_a3t(p0_a2t(p0_a1t() )) ) )) );
+    p = p0_st(p0_0t(status, var), var);
+    q = p0_it(p0_i0t(p0_0t(status, var)), var);
   }
-  inline ~P0maxRank() { ; }
-  inline vector<T> next(const T& in) {
-    static const T zero(int(0));
-    static const T one(int(1));
-    vector<T> res;
-    res.reserve(3);
-    res.emplace_back(p.next(in));
-    res.emplace_back(q.next(in));
-    res.emplace_back(r.next(in));
-    return res;
+  inline ~P0maxRank0() { ; }
+  inline T next(const T& in) {
+    return (p.next(in) + q.next(in)) / T(int(2));
   }
   // N.B. on existing taylor series.
   //      if the sampling frequency is not enough, middle range of the original
@@ -279,7 +266,26 @@ public:
   //      so we should use sectional measurement for them.
   typedef P0<T, idFeeder<T> > p0_0t;
   // N.B. sectional measurement, also expected value.
-  typedef shrinkMatrix<T, p0_0t> p0_1t;
+  typedef shrinkMatrix<T, p0_0t> p0_st;
+
+  typedef P0inv<T, p0_0t> p0_i0t;
+  typedef shrinkMatrix<T, p0_i0t> p0_it;
+  
+  p0_st p;
+  p0_it q;
+};
+
+template <typename T> class P0maxRank {
+public:
+  inline P0maxRank() { ; }
+  inline P0maxRank(const int& status, int var = - 1) {
+    if(var < 0) var = max(int(1), int(exp(sqrt(log(T(status))))));
+    p = p0_t(p0_5t(p0_4t(p0_3t(p0_2t(p0_1t(p0_0t(status, var) )) )) ));
+  }
+  inline ~P0maxRank() { ; }
+  inline T next(const T& in) {
+    return p.next(in);
+  };
 /*
   // N.B. make information-rich not to associative/commutative.
   //      2 dimension semi-order causes (x, status) from input as sedenion.
@@ -297,88 +303,17 @@ public:
   typedef sumChain<T, p0_9t>  p0_10t;
   // N.B. we take average as origin of input.
   typedef sumChain<T, p0_10t, true> p0_t;
-  // N.B. if original sample lebesgue integrate is not enough continuous,
-  //      imitate original function by some of sample points,
-  //      but move origin point to average one, so a little better
-  //      original function estimation.
-  // N.B. frequency space *= 2 causes nyquist frequency ok.
-  // N.B. but this is equivalent from jammer on PRNG, and probe on some
-  //      measurable phenomenon.
-  //typedef P0Expect<T, p0_11t> p0_t;
   // N.B. this needs huge memory to run.
 */
   // N.B. plain complex form.
-  typedef northPole<T, p0_1t>  p0_s2t;
-  typedef northPole<T, p0_s2t> p0_s3t;
-  typedef logChain<T, p0_s3t>  p0_s4t;
-  typedef logChain<T, p0_s4t>  p0_s5t;
-  typedef sumChain<T, p0_s5t>  p0_s6t;
-  typedef sumChain<T, p0_s6t, true> p0_st;
-
-  typedef P0inv<T, p0_0t> p0_i0t;
-  typedef shrinkMatrix<T, p0_i0t> p0_i1t;
-  typedef northPole<T, p0_i1t> p0_i2t;
-  typedef northPole<T, p0_i2t> p0_i3t;
-  typedef logChain<T, p0_i3t> p0_i4t;
-  typedef logChain<T, p0_i4t> p0_i5t;
-  typedef sumChain<T, p0_i5t>  p0_i6t;
-  typedef sumChain<T, p0_i6t, true> p0_it;
-
-  typedef sumChain<T, Pnull<T>, true> p0_a1t;
-  typedef northPole<T, p0_a1t>    p0_a2t;
-  typedef northPole<T, p0_a2t>    p0_a3t;
-  typedef logChain<T, p0_a3t>     p0_a4t;
-  typedef logChain<T, p0_a4t>     p0_a5t;
-  typedef sumChain<T, p0_a5t>     p0_a6t;
-  typedef sumChain<T, p0_a6t, true> p0_at;
-  p0_st p;
-  p0_it q;
-  p0_at r;
-};
-
-template <typename T, typename P> class P0ContRand {
-public:
-  inline P0ContRand() { ; }
-  inline P0ContRand(P&& p, const int& para) {
-    (this->p).resize(para, p);
-    r.resize(para, T(t ^= t));
-    br.resize(para, T(t));
-  }
-  inline ~P0ContRand() { ; }
-  inline T next(const T& in) {
-    t ++;
-    T res(0);
-    for(int i = 0; i < p.size(); i ++) {
-      const auto rr(t & 1 ? r[i] + br[i] : r[i] + r[i]);
-      res += p[i].next(in * rr);
-      if(! (t & 1)) {
-        br[i] = r[i];
-        r[i]  = T((random() & 0x7ffffff) + 1) / T(int(0x8000000));
-      }
-    }
-    return res /= T(int(p.size()));
-  }
-  vector<P> p;
-  vector<T> r;
-  vector<T> br;
-  int t;
-};
-
-template <typename T, typename P> class P0Binary01 {
-public:
-  inline P0Binary01() { ; }
-  inline P0Binary01(P&& p, const int& depth = 1) { (this->p).resize(depth, p); }
-  inline ~P0Binary01() { ; }
-  inline T next(const T& in) {
-    T pw(int(1));
-    T res(int(0));
-    for(int i = 0; i < p.size(); i ++) {
-      res += pw * (p[i].next(T(int(in / pw) & 1) - T(int(1)) / T(int(2))) + T(int(1)) / T(int(2)) );
-      pw /= T(int(2));
-    }
-    return res;
-  }
-  vector<P> p;
+  typedef P0maxRank0<T> p0_0t;
+  typedef northPole<T, p0_0t>  p0_1t;
+  typedef northPole<T, p0_1t> p0_2t;
+  typedef logChain<T, p0_2t>  p0_3t;
+  typedef logChain<T, p0_3t>  p0_4t;
+  typedef sumChain<T, p0_4t>  p0_5t;
+  typedef sumChain<T, p0_5t, true> p0_t;
+  p0_t p;
 };
 
 #define _P0_
