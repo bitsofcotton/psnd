@@ -11,7 +11,6 @@
 #include "lieonn.hh"
 typedef myfloat num_t;
 typedef num_t sfloat;
-#include "p0.hh"
 
 const auto pblocks(80);
 
