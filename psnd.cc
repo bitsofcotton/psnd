@@ -186,14 +186,15 @@ std::pair<SimpleVector<int16_t>, bool> blockin(std::istream& in) {
 
 int main(int argc, char* argv[]) {
   if(argc < 2) usage();
-  P0<sfloat, idFeeder<sfloat> > p(pblocks);
+  idFeeder<sfloat> f(pblocks);
+  P0maxRank0<sfloat> p;
   if(std::string(argv[1]) == std::string("-e")) {
     try {
       SimpleVector<int16_t> work(blocks);
       int nbuf(0);
       for(int i = 0; i < work.size(); i ++) {
         std::cin.read(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
-        nbuf = int(p.next(sfloat(int(work[i]))));
+        nbuf = int(p.next(f.next(sfloat(int(work[i])))));
       }
       const auto out(blockout(work));
       for(int i = 0; i < out.size(); i ++)
@@ -206,7 +207,7 @@ int main(int argc, char* argv[]) {
         for(int i = 0; i < work.size(); i ++) {
           const auto bbuf(work[i]);
           work[i] -= nbuf;
-          nbuf     = int(p.next(sfloat(int(bbuf))));
+          nbuf     = int(p.next(f.next(sfloat(int(bbuf)))));
         }
         const auto out(blockout(work));
         if(out.size() <= out0.size())
@@ -227,7 +228,7 @@ int main(int argc, char* argv[]) {
       int  nbuf(0);
       for(int i = 0; i < work.size(); i ++) {
         std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
-        nbuf = int(p.next(sfloat(int(work[i]))));
+        nbuf = int(p.next(f.next(sfloat(int(work[i])))));
       }
       while(! std::cin.eof() && ! std::cin.bad()) {
         const auto w(blockin(std::cin));
@@ -235,12 +236,12 @@ int main(int argc, char* argv[]) {
         if(! w.second)
           for(int i = 0; i < work.size(); i ++) {
             work[i] += nbuf;
-            nbuf     = int(p.next(sfloat(int(work[i]))));
+            nbuf     = int(p.next(f.next(sfloat(int(work[i])))));
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         else
           for(int i = 0; i < work.size(); i ++) {
-            nbuf = int(p.next(sfloat(int(work[i]))));
+            nbuf = int(p.next(f.next(sfloat(int(work[i])))));
             std::cout.write(reinterpret_cast<char*>(&work[i]), sizeof(int16_t));
           }
         std::cout.flush();
