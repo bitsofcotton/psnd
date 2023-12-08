@@ -6,8 +6,8 @@ There's many programs to use predictor applying into compression.
 So this is another try.
 
 # Usage
-    ./psnd -e < continuous.dat-16bit > compress.dat
-    ./psnd -d < compress.dat > continuous.dat-16bit
+    ./psnd -e < continuous.dat-16bit-signed > compress.dat
+    ./psnd -d < compress.dat > continuous.dat-16bit-signed
 
 # Description
 Compress continuous 16-bit signed integer input by using P0 prediction. This uses block and count by factorial but this is safe for compress and uncompress.
@@ -23,4 +23,5 @@ This is only useful if original datastream is continuous enough, otherwise, this
 # Real close
 2023/03/13 try to real close. integrate all files into lieonn.hh.
 2023/03/24 code clean.
+2023/12/09 param change, realclose.
 

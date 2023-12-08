@@ -12,7 +12,7 @@
 typedef myfloat num_t;
 typedef num_t sfloat;
 
-const auto pblocks(80);
+const auto pblocks(3);
 
 /*
 const auto blocks(128);
