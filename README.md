@@ -8,6 +8,8 @@ So this is another try.
 # Usage
     ./psnd -e < continuous.dat-16bit-signed > compress.dat
     ./psnd -d < compress.dat > continuous.dat-16bit-signed
+    # To reproduce 16bit-sound monoral raw file, we can use with sox program:
+    sox -e signed -L -b 16 -c 1 input.wav output.raw
 
 # Description
 Compress continuous 16-bit signed integer input by using P0 prediction. This uses block and count by factorial but this is safe for compress and uncompress.
