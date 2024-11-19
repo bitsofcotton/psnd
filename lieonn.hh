@@ -2802,6 +2802,8 @@ template <typename T> static inline SimpleVector<T> taylor(const int& size, cons
   if(residue == T(int(0))) return SimpleVector<T>(size).ek(step0);
   // N.B. following code is equivalent to exp each dft.
   //      this improves both accuracy and speed.
+  // N.B. We don't need to matter which sign dft/idft uses till the sign
+  //      we multiply is bonded to the transformation.
   auto res(dft<T>(size));
   static const auto Pi(T(int(4)) * atan2(T(int(1)), T(int(1)) ));
 #if defined(_OPENMP)
@@ -2813,6 +2815,7 @@ template <typename T> static inline SimpleVector<T> taylor(const int& size, cons
 /*
   SimpleVector<T> res(size);
   res.ek(step0);
+  if(residue == T(int(0))) return res;
   const auto Dt(diff<T>(size).transpose());
         auto dt(Dt.col(step0) * residue);
   // N.B.
