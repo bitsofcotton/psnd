@@ -2810,7 +2810,7 @@ template <typename T> static inline SimpleVector<T> taylor(const int& size, cons
 #pragma omp parallel for schedule(static, 1)
 #endif
   for(int i = 0; i < res.rows(); i ++)
-    res.row(i) *= exp(complex<T>(T(int(0)), T(int(2)) * Pi * T(i) / T(res.rows()) ));
+    res.row(i) *= exp(complex<T>(T(int(0)), - T(int(2)) * Pi * T(i) / T(res.rows()) ));
   return (res.transpose() * dft<T>(- size).row(step0)).template real<T>();
 /*
   SimpleVector<T> res(size);
@@ -3384,7 +3384,7 @@ template <typename T> const SimpleMatrix<complex<T> >& dftcache(const int& size)
   return cidft[abs(size)] = dft<T>(size);
 }
 
-template <typename T, int r = 4> class P0 {
+template <typename T, int r = 8> class P0 {
 public:
   inline P0(const int& step = 1) {
     this->step = step;
